@@ -46,6 +46,9 @@ export default function Checkout() {
 
       if (!res.ok) throw new Error("Failed to submit order");
 
+      // Clear the cart after successful order submission
+      ctx.clearCart();
+      
       setDidSubmit(true);
       setIsSubmitting(false);
 
