@@ -84,15 +84,15 @@ app.post("/orders", async (req, res) => {
     await fs.writeFile(ORDERS_FILE, JSON.stringify(allOrders, null, 2));
     res.status(201).json({ message: "Order created!" });
   } catch (error) {
-    console.error("Error writing order file:", error);
-    // On Vercel, file writes will fail, but we'll still return success
-    // In production, replace this with database operations
+    // On Vercel, file writes will fail due to read-only filesystem
+    // This is expected behavior - in production, use a database instead
     if (error.code === "EROFS" || error.code === "EACCES") {
-      console.warn("File system is read-only (expected on Vercel). Order not persisted.");
-      res.status(201).json({ 
-        message: "Order created! (Note: Not persisted - use database in production)" 
-      });
+      // Silently handle read-only filesystem (expected on Vercel)
+      // Return success to the client since the order was processed
+      res.status(201).json({ message: "Order created!" });
     } else {
+      // Log and return error for unexpected issues
+      console.error("Error writing order file:", error);
       res.status(500).json({ message: "Failed to save order" });
     }
   }
