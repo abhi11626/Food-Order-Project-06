@@ -15,6 +15,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/", (req, res) => {
+  res.json({ message: "Food Order API is running" });
+});
+
 app.get("/meals", async (req, res) => {
   const meals = await fs.readFile("./data/available-meals.json", "utf8");
   res.json(JSON.parse(meals));
@@ -68,10 +72,10 @@ app.use((req, res) => {
   res.status(404).json({ message: "Not found" });
 });
 
-// Export the app for Vercel serverless functions
-export default app;
-
 // Only listen on port 3000 if running locally
 if (process.env.NODE_ENV !== 'production') {
   app.listen(3000);
 }
+
+// Export the app for Vercel serverless functions
+export default app;
