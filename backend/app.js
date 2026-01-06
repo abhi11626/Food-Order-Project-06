@@ -1,12 +1,24 @@
 import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import bodyParser from "body-parser";
 import express from "express";
 
+// Get the directory of the current file (app.js)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Define absolute paths for data files
+const DATA_DIR = path.join(__dirname, "data");
+const MEALS_FILE = path.join(DATA_DIR, "available-meals.json");
+const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
+const PUBLIC_DIR = path.join(__dirname, "public");
+
 const app = express();
 
 app.use(bodyParser.json());
-app.use(express.static("public"));
+app.use(express.static(PUBLIC_DIR));
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -20,8 +32,13 @@ app.get("/", (req, res) => {
 });
 
 app.get("/meals", async (req, res) => {
-  const meals = await fs.readFile("./data/available-meals.json", "utf8");
-  res.json(JSON.parse(meals));
+  try {
+    const meals = await fs.readFile(MEALS_FILE, "utf8");
+    res.json(JSON.parse(meals));
+  } catch (error) {
+    console.error("Error reading meals file:", error);
+    res.status(500).json({ message: "Failed to load meals" });
+  }
 });
 
 app.post("/orders", async (req, res) => {
@@ -57,11 +74,28 @@ app.post("/orders", async (req, res) => {
     ...orderData,
     id: (Math.random() * 1000).toString(),
   };
-  const orders = await fs.readFile("./data/orders.json", "utf8");
-  const allOrders = JSON.parse(orders);
-  allOrders.push(newOrder);
-  await fs.writeFile("./data/orders.json", JSON.stringify(allOrders));
-  res.status(201).json({ message: "Order created!" });
+  
+  try {
+    // Note: This will fail on Vercel's read-only filesystem
+    // For production, you'll need to use a database
+    const orders = await fs.readFile(ORDERS_FILE, "utf8");
+    const allOrders = JSON.parse(orders);
+    allOrders.push(newOrder);
+    await fs.writeFile(ORDERS_FILE, JSON.stringify(allOrders, null, 2));
+    res.status(201).json({ message: "Order created!" });
+  } catch (error) {
+    console.error("Error writing order file:", error);
+    // On Vercel, file writes will fail, but we'll still return success
+    // In production, replace this with database operations
+    if (error.code === "EROFS" || error.code === "EACCES") {
+      console.warn("File system is read-only (expected on Vercel). Order not persisted.");
+      res.status(201).json({ 
+        message: "Order created! (Note: Not persisted - use database in production)" 
+      });
+    } else {
+      res.status(500).json({ message: "Failed to save order" });
+    }
+  }
 });
 
 app.use((req, res) => {
