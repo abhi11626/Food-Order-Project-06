@@ -28,20 +28,25 @@ export default function Cart() {
       onClose={userProgressCtx.progress === "cart" ? closeCartHandler : null}
     >
       <h2>Your Shopping Cart</h2>
-      <p>Cart is empty!</p>
-      <ul>
-        {ctx.items.map((item) => (
-          <CartItem
-            key={item.id}
-            name={item.name}
-            quantity={item.quantity}
-            price={item.price}
-            onAdd={() => ctx.addItem({ ...item, quantity: 1 })}
-            onRemove={() => ctx.removeItem(item.id)}
-          />
-        ))}
-      </ul>
-      <p className="cart-total">{formatCurrency(cartTotal)}</p>
+      {ctx.items.length === 0 ? (
+        <p>Cart is empty</p>
+      ) : (
+        <>
+          <ul>
+            {ctx.items.map((item) => (
+              <CartItem
+                key={item.id}
+                name={item.name}
+                quantity={item.quantity}
+                price={item.price}
+                onAdd={() => ctx.addItem({ ...item, quantity: 1 })}
+                onRemove={() => ctx.removeItem(item.id)}
+              />
+            ))}
+          </ul>
+          <p className="cart-total">{formatCurrency(cartTotal)}</p>
+        </>
+      )}
       <p className="modal-actions">
         <Button onClick={closeCartHandler} textOnly>
           Close
