@@ -5,6 +5,7 @@ import { formatCurrency } from "../util.js/formatting";
 import Input from "./UI/Input";
 import Button from "./UI/Button";
 import { UserProgressContext } from "../store/UserProgress";
+import { API_BASE_URL } from "../config/api";
 
 export default function Checkout() {
   const ctx = useContext(CartContext);
@@ -30,7 +31,7 @@ export default function Checkout() {
     setSubmitError(null);
 
     try {
-      const res = await fetch("http://localhost:3000/orders", {
+      const res = await fetch(`${API_BASE_URL}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -45,6 +46,9 @@ export default function Checkout() {
 
       if (!res.ok) throw new Error("Failed to submit order");
 
+      // Clear the cart after successful order submission
+      ctx.clearCart();
+      
       setDidSubmit(true);
       setIsSubmitting(false);
 

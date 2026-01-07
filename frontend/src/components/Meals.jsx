@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import MealItem from "./MealItem";
+import { API_BASE_URL } from "../config/api";
 
 export default function Meals() {
   const [loadedMeals, setLoadedMeals] = useState([]);
@@ -10,7 +11,7 @@ export default function Meals() {
     async function fetchMeals() {
       try {
         setIsLoading(true);
-        const response = await fetch("http://localhost:3000/meals");
+        const response = await fetch(`${API_BASE_URL}/meals`);
 
         if (!response.ok) {
           throw new Error(
@@ -27,7 +28,7 @@ export default function Meals() {
 
         if (err instanceof TypeError) {
           errorMessage =
-            "Unable to connect to server. Please check if the backend is running at http://localhost:3000";
+            `Unable to connect to server. Please check if the backend is running at ${API_BASE_URL}`;
         } else if (err.message.includes("Server error")) {
           errorMessage = err.message;
         } else {
